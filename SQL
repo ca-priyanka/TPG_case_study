@@ -40,6 +40,7 @@ SET
 losing_nbn_speed = REPLACE(losing_nbn_speed, 'Speed', 'NBN')
 where losing_nbn_speed like '%Speed%';
 
+#### Similar reclassification done on gaining column, also replaced '-' with '/' as per data dictionary
 UPDATE churn_data
 SET 
 gaining_nbn_speed = REPLACE(gaining_nbn_speed, 'Speed', 'NBN')
