@@ -42,7 +42,7 @@ where losing_nbn_speed like '%Speed%';
 
 UPDATE churn_data
 SET 
-gaining_nbn_speed = REPLACE(losing_nbn_speed, 'Speed', 'NBN')
+gaining_nbn_speed = REPLACE(gaining_nbn_speed, 'Speed', 'NBN')
 where gaining_nbn_speed like '%Speed%';
 
 #### checking the unique values 
