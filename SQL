@@ -1,4 +1,7 @@
+#### Created schema tpg_test in MySQL Workbench
 use tpg_test;
+
+#### Created new table with required columns and datatypes
 CREATE TABLE churn_data(
     order_id varchar(255),
     loss_date datetime,
@@ -9,7 +12,7 @@ CREATE TABLE churn_data(
     gaining_provider varchar(255),
     gaining_nbn_speed varchar(255)
 );
-
+#### Uploaded data using table import wizard, alternatively below code can be used
 /* LOAD DATA INFILE 'C:\ProgramData\MySQL\MySQL Server 8.0\Uploads\tpg_churn.csv'
 INTO TABLE churn_data
 FIELDS TERMINATED BY ';'
@@ -17,10 +20,31 @@ LINES TERMINATED BY '\n'
 (order_id, loss_date, @date_time_variable, billing_system, brand, losing_nbn_speed, state, gaining_provider, gaining_nbn_speed)
 SET loss_date = STR_TO_DATE(@date_time_variable, '%m/%d/%Y'); */
 
+#### Checking no of rows uploaded
 select count(*)
 from churn_data;
 
--- The below code will remove the words "Order_id_" from the order_id column, leaving only integer values in the column
+#### The below code will remove the words "Order_id_" from the order_id column, leaving only integer values in the column
 update churn_data
 SET order_id = CAST(right(order_id, 4) as signed)
 where order_id like 'Order_iD_%';
+
+#### Count 'Unknown values' There are 7 unknown values.
+select count(*)
+from churn_data
+where "Unknown" in (order_id, loss_date, billing_system, brand, losing_nbn_speed, state, gaining_provider, gaining_nbn_speed);
+
+#### Reclassify Losing Speed and Gaining Speed to the 7 standardized nbn speed tiers as shown on the field definition tab
+UPDATE churn_data
+SET 
+losing_nbn_speed = REPLACE(losing_nbn_speed, 'Speed', 'NBN')
+where losing_nbn_speed like '%Speed%';
+
+UPDATE churn_data
+SET 
+gaining_nbn_speed = REPLACE(losing_nbn_speed, 'Speed', 'NBN')
+where gaining_nbn_speed like '%Speed%';
+
+#### checking the unique values 
+select distinct(losing_nbn_speed)
+from churn_data
