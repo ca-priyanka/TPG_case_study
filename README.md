@@ -6,7 +6,7 @@ This repository contains SQL scripts and queries for analyzing customer churn in
 
 ## Dataset
 
-The dataset includes relevant information about customers, their usage, and churn status. The key columns include `customer_id`, `losing_nbn_speed`, `gaining_nbn_speed`, and `churn_date`. The `churn_date` column indicates the date when a customer churned.
+The dataset includes relevant information about customers, their usage, and churn status. The key columns include `order_id`, `losing_nbn_speed`, `gaining_nbn_speed`, and `churn_date`. The `churn_date` column indicates the date when a customer churned.
 
 ## Analysis Steps
 
