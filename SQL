@@ -1,58 +1,70 @@
--- Created schema tpg_test in MySQL Workbench
+-- Created schema tpg_test in PGAdmin4 Workbench, the DB used here is PostGres
 create database tpg_test;
-use tpg_test;
 
 -- Created new table with required columns and datatypes
-CREATE TABLE churn_data(
-	id int not null auto_increment,
+CREATE TABLE churn_data (
+    id SERIAL PRIMARY KEY,
     order_id varchar(255),
-    loss_date datetime,
+    loss_date timestamp,
     billing_system varchar(255),
     brand varchar(255),
     losing_nbn_speed varchar(255),
     state varchar(255),
     gaining_provider varchar(255),
-    gaining_nbn_speed varchar(255),
-    primary key(id)
+    gaining_nbn_speed varchar(255)
 );
--- Uploaded data using table import wizard, alternatively below code can be used
-/* LOAD DATA INFILE 'C:\ProgramData\MySQL\MySQL Server 8.0\Uploads\tpg_churn.csv'
-INTO TABLE churn_data
-FIELDS TERMINATED BY ';'
-LINES TERMINATED BY '\n'
-(order_id, loss_date, @date_time_variable, billing_system, brand, losing_nbn_speed, state, gaining_provider, gaining_nbn_speed)
-SET loss_date = STR_TO_DATE(@date_time_variable, '%m/%d/%Y'); */
 
--- Checking no of rows uploaded
-select count(*)
-from churn_data;
+-- Uploaded data from csv
+COPY churn_data(order_id, loss_date, billing_system, brand, losing_nbn_speed, state, gaining_provider, gaining_nbn_speed)
+FROM 'C:\ProgramData\MySQL\MySQL Server 8.0\Uploads\tpg_churn.csv' DELIMITER ',' CSV HEADER;
 
--- The below code will remove the words "Order_id_" from the order_id column, leaving only integer values in the column
-update churn_data
-SET order_id = CAST(right(order_id, 4) as signed)
-where order_id like 'Order_iD_%';
+-- Checking no of rows uploaded (there are 5279 records)
+select count(*) from churn_data;
 
--- Count 'Unknown values' There are 7 unknown values.
-select count(*)
-from churn_data
-where "Unknown" in (order_id, loss_date, billing_system, brand, losing_nbn_speed, state, gaining_provider, gaining_nbn_speed);
+-- Check any data discrepancies.
+-- 1. Count 'Unknown values' (There are 7 unknown values).
+SELECT COUNT(*)
+FROM churn_data
+WHERE 'Unknown' IN (order_id, billing_system, brand, losing_nbn_speed, state, gaining_provider, gaining_nbn_speed);
 
+-- 2. Count 'Null' values (There are none).
+SELECT COUNT(*) AS null_count
+FROM churn_data
+WHERE (order_id, loss_date, billing_system, brand, losing_nbn_speed, state, gaining_provider, gaining_nbn_speed) IS NULL;
+
+-- Assignment requirements
 -- Reclassify Losing Speed and Gaining Speed to the 7 standardized nbn speed tiers as shown on the field definition tab
+-- step 1 - Replace Speed prefix with NBN in losing_nbn_speed
 UPDATE churn_data
 SET 
 losing_nbn_speed = REPLACE(losing_nbn_speed, 'Speed', 'NBN')
 where losing_nbn_speed like '%Speed%';
 
--- Similar reclassification done on gaining column, also replaced '-' with '/' as per data dictionary
+-- step 2 - Replace "-" with "/" in losing_nbn_speed coloumn.
+UPDATE churn_data
+SET 
+losing_nbn_speed = REPLACE(losing_nbn_speed, '-', '/')
+where losing_nbn_speed like '%-%';
+
+-- Check the data after transformation
+select distinct(losing_nbn_speed) from churn_data;
+
+-- Step 3 : Similar reclassification done on gaining column.
 UPDATE churn_data
 SET 
 gaining_nbn_speed = REPLACE(gaining_nbn_speed, 'Speed', 'NBN')
 where gaining_nbn_speed like '%Speed%';
 
--- checking the unique values 
-select distinct(losing_nbn_speed)
-from churn_data
+-- Step 4 : Replace "-" with "/" in gaining_nbn_speed coloumn.
+UPDATE churn_data
+SET 
+gaining_nbn_speed = REPLACE(gaining_nbn_speed, '-', '/')
+where gaining_nbn_speed like '%-%';
 
+-- Check the data after transformation
+select distinct(gaining_nbn_speed) from churn_data;
+
+-- Create additional column where necessary – e.g. determine whether the customer is upgrading, downgrading or keeping the same speed when they move to the new provider
 -- create column'speed_change' with 3 unique values 'upgraded', 'downgraded', 'same speed'
 ALTER TABLE churn_data
 ADD COLUMN speed_change VARCHAR(255);
