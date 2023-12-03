@@ -1,8 +1,10 @@
 -- Created schema tpg_test in MySQL Workbench
+create database tpg_test;
 use tpg_test;
 
 -- Created new table with required columns and datatypes
 CREATE TABLE churn_data(
+	id int not null auto_increment,
     order_id varchar(255),
     loss_date datetime,
     billing_system varchar(255),
@@ -10,7 +12,8 @@ CREATE TABLE churn_data(
     losing_nbn_speed varchar(255),
     state varchar(255),
     gaining_provider varchar(255),
-    gaining_nbn_speed varchar(255)
+    gaining_nbn_speed varchar(255),
+    primary key(id)
 );
 -- Uploaded data using table import wizard, alternatively below code can be used
 /* LOAD DATA INFILE 'C:\ProgramData\MySQL\MySQL Server 8.0\Uploads\tpg_churn.csv'
