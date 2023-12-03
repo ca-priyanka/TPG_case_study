@@ -32,8 +32,8 @@ SELECT COUNT(*) AS null_count
 FROM churn_data
 WHERE (order_id, loss_date, billing_system, brand, losing_nbn_speed, state, gaining_provider, gaining_nbn_speed) IS NULL;
 
--- Assignment requirements
--- Reclassify Losing Speed and Gaining Speed to the 7 standardized nbn speed tiers as shown on the field definition tab
+-- 3. Assignment requirements
+-- 3.1 Reclassify Losing Speed and Gaining Speed to the 7 standardized nbn speed tiers as shown on the field definition tab
 -- step 1 - Replace Speed prefix with NBN in losing_nbn_speed
 UPDATE churn_data
 SET 
@@ -64,12 +64,17 @@ where gaining_nbn_speed like '%-%';
 -- Check the data after transformation
 select distinct(gaining_nbn_speed) from churn_data;
 
--- Create additional column where necessary – e.g. determine whether the customer is upgrading, downgrading or keeping the same speed when they move to the new provider
--- create column'speed_change' with 3 unique values 'upgraded', 'downgraded', 'same speed'
-ALTER TABLE churn_data
+-- 3.2 Create additional column where necessary – e.g. determine whether the customer is upgrading, downgrading or keeping the same speed when they move to the new provider
+
+-- step 1. create a copy of the database to do data transformations
+CREATE TABLE churn_data_copy AS
+SELECT * FROM churn_data;
+
+-- step 2. create column'speed_change' with 3 unique values 'upgraded', 'downgraded', 'same speed'
+ALTER TABLE churn_data_copy
 ADD COLUMN speed_change VARCHAR(255);
 
-UPDATE churn_data
+UPDATE churn_data_copy
 SET speed_change =
 case
 when losing_nbn_speed = gaining_nbn_speed then 'same speed'
@@ -81,5 +86,33 @@ when losing_nbn_speed = 'NBN100' and gaining_nbn_speed in ('NBN250', 'NBN1000') 
 when losing_nbn_speed = 'NBN250' and gaining_nbn_speed in ('NBN1000') then 'upgraded'
 ELSE 'downgraded'
 END;
+
+-- check the newly created columns. Checked counts of same speed with excel as well.
+select distinct( speed_change)
+from churn_data_copy;
+
+select count(speed_change) 
+from churn_data_copy 
+where losing_nbn_speed = 'same speed';
+
+-- 4. clean and standardize the 'gaining_provider' column values where same provider has multiple names e.g. Idea and Idea Ltd
+
+UPDATE churn_data_copy
+SET gaining_provider =
+  CASE
+  	WHEN gaining_provider = 'Idea' THEN 'Idea Ltd'
+    WHEN gaining_provider = 'SuperTel' THEN 'Super Pty Ltd'
+   	ELSE gaining_provider
+  END
+WHERE gaining_provider IN ('Idea', 'SuperTel')
+
+-- checked counts with excel Idea Ltd has 1066 values and Super Pty Ltd has 437 values. 
+select count(gaining_provider) 
+from churn_data_copy 
+where gaining_provider = 'Idea Ltd';
+
+select count(gaining_provider) 
+from churn_data_copy 
+where gaining_provider like '%Super%';
 
 -- Data exported to csv to be loaded into PowerBI
