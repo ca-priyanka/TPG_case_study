@@ -31,3 +31,6 @@ The dataset includes information for 4 months June- Sep 2023. The key columns in
 
 6. **Conclusion:**
    - Summarize key insights and observations.
+
+### Appendix
+The raw data is uploaded as `TPG_churn.csv`
